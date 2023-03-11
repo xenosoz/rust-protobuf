@@ -336,7 +336,8 @@ impl<'a> Parser<'a> {
     fn read_string(&mut self) -> ParseResultWithoutLoc<String> {
         let str_lit = self.tokenizer.next_str_lit()?;
 
-        let mut lexer = Lexer::new(&str_lit.escaped, ParserLanguage::Json);
+        let mut lexer = Lexer::new(&str_lit.char_or_escape_seq,
+				   ParserLanguage::Json);
         let mut r = String::new();
         while !lexer.eof() {
             r.push(

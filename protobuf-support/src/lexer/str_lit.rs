@@ -17,19 +17,28 @@ pub type StrLitDecodeResult<T> = Result<T, StrLitDecodeError>;
 /// String literal, both `string` and `bytes`.
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct StrLit {
-    pub escaped: String,
+    pub char_or_escape_seq: String,
 }
 
 impl fmt::Display for StrLit {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "\"{}\"", &self.escaped)
+        write!(f, "\"{}\"", &self.char_or_escape_seq)
     }
 }
 
 impl StrLit {
+    pub fn to_string(&self) -> StrLitDecodeResult<String> {
+	// XXX: need a treat for escaped characters.
+	Ok(String::from(&self.char_or_escape_seq))
+    }
+
+    pub fn to_bytes(&self) -> StrLitDecodeResult<Vec<u8>> {
+	Ok(self.char_or_escape_seq.as_bytes().to_vec())
+    }
+
     /// May fail if not valid UTF8
     pub fn decode_utf8(&self) -> StrLitDecodeResult<String> {
-        let mut lexer = Lexer::new(&self.escaped, ParserLanguage::Json);
+        let mut lexer = Lexer::new(&self.char_or_escape_seq, ParserLanguage::Json);
         let mut r = Vec::new();
         while !lexer.eof() {
             r.push(
@@ -42,7 +51,7 @@ impl StrLit {
     }
 
     pub fn decode_bytes(&self) -> StrLitDecodeResult<Vec<u8>> {
-        let mut lexer = Lexer::new(&self.escaped, ParserLanguage::Json);
+        let mut lexer = Lexer::new(&self.char_or_escape_seq, ParserLanguage::Json);
         let mut r = Vec::new();
         while !lexer.eof() {
             r.push(
@@ -55,7 +64,7 @@ impl StrLit {
     }
 
     pub fn quoted(&self) -> String {
-        format!("\"{}\"", self.escaped)
+        format!("\"{}\"", self.char_or_escape_seq)
     }
 }
 
@@ -68,7 +77,7 @@ mod test {
         assert_eq!(
             "\u{1234}".to_owned(),
             StrLit {
-                escaped: "\\341\\210\\264".to_owned()
+                char_or_escape_seq: "\\341\\210\\264".to_owned()
             }
             .decode_utf8()
             .unwrap()

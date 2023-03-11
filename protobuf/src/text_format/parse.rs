@@ -55,6 +55,7 @@ pub type ParseWithLocResult<A> = Result<A, ParseError>;
 
 #[derive(Clone)]
 struct Parser<'a> {
+    language: ParserLanguage,
     tokenizer: Tokenizer<'a>,
 }
 
@@ -154,19 +155,35 @@ impl<'a> Parser<'a> {
     fn read_string(&mut self) -> ParseResult<String> {
         self.read_colon("string value")?;
 
-        Ok(self
-            .tokenizer
-            .next_str_lit()
-            .and_then(|s| s.decode_utf8().map_err(From::from))?)
+	match self.language {
+	    ParserLanguage::TextFormat =>
+		Ok(self
+		   .tokenizer
+		   .next_str_lit()
+		   .and_then(|s| s.to_string().map_err(From::from))?),
+	    _ =>
+		Ok(self
+		   .tokenizer
+		   .next_str_lit()
+		   .and_then(|s| s.decode_utf8().map_err(From::from))?),
+	}
     }
 
     fn read_bytes(&mut self) -> ParseResult<Vec<u8>> {
         self.read_colon("bytes value")?;
 
-        Ok(self
-            .tokenizer
-            .next_str_lit()
-            .and_then(|s| s.decode_bytes().map_err(From::from))?)
+	match self.language {
+	    ParserLanguage::TextFormat =>
+		Ok(self
+		   .tokenizer
+		   .next_str_lit()
+		   .and_then(|s| s.to_bytes().map_err(From::from))?),
+	    _ =>
+		Ok(self
+		   .tokenizer
+		   .next_str_lit()
+		   .and_then(|s| s.decode_bytes().map_err(From::from))?),
+	}
     }
 
     fn read_message(&mut self, descriptor: &MessageDescriptor) -> ParseResult<Box<dyn MessageDyn>> {
@@ -302,6 +319,7 @@ impl<'a> Parser<'a> {
 /// This function does not check if message required fields are set.
 pub fn merge_from_str(message: &mut dyn MessageDyn, input: &str) -> ParseWithLocResult<()> {
     let mut parser = Parser {
+	language: ParserLanguage::TextFormat,
         tokenizer: Tokenizer::new(input, ParserLanguage::TextFormat),
     };
     parser.merge(message)

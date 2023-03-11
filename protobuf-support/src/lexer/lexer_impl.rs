@@ -632,8 +632,8 @@ impl<'a> Lexer<'a> {
             }
         }
 
-        if let Some(escaped) = self.next_str_lit_raw_opt()? {
-            return Ok(Token::StrLit(StrLit { escaped }));
+        if let Some(char_or_escape_seq) = self.next_str_lit_raw_opt()? {
+            return Ok(Token::StrLit(StrLit { char_or_escape_seq }));
         }
 
         // This branch must be after str lit

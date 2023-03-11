@@ -115,7 +115,7 @@ impl RuntimeType {
             RuntimeType::String => Ok(ReflectValueBox::String(value.to_owned())),
             // For bytes, contains the C escaped value.  All bytes >= 128 are escaped
             RuntimeType::VecU8 => StrLit {
-                escaped: value.to_owned(),
+                char_or_escape_seq: value.to_owned(),
             }
             .decode_bytes()
             .map_err(|_| ())

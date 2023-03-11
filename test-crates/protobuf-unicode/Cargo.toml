@@ -6,8 +6,8 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-protobuf = "3"
+protobuf = { path = "../../protobuf" }
 
 [build-dependencies]
-protobuf-codegen = "3"
+protobuf-codegen = { path = "../../protobuf-codegen" }
 protoc-rust = "^2.0"
